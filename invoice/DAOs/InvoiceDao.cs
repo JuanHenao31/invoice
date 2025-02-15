@@ -31,17 +31,15 @@ public class InvoiceDao : IInvoiceDao
                 CommandType = CommandType.StoredProcedure
             };
 
-            // Definir parámetros explícitamente con sus tipos
-            command.Parameters.Add(new SqlParameter("@ClientName", SqlDbType.NVarChar, 100) 
-                { Value = invoice.ClientName });
-            command.Parameters.Add(new SqlParameter("@ClientIdentificationNumber", SqlDbType.NVarChar, 20) 
-                { Value = invoice.ClientIdentificationNumber });
-            command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) 
-                { Value = invoice.Amount, Precision = 18, Scale = 2 });
-            command.Parameters.Add(new SqlParameter("@InvoiceDescription", SqlDbType.NVarChar, 500) 
-                { Value = invoice.InvoiceDescription });
-            command.Parameters.Add(new SqlParameter("@CreatedAt", SqlDbType.DateTime) 
-                { Direction = ParameterDirection.Output });
+            // Parámetros del SP
+            command.Parameters.Add(new SqlParameter("@ClientName", SqlDbType.NVarChar, 100) { Value = invoice.ClientName });
+            command.Parameters.Add(new SqlParameter("@ClientIdentificationNumber", SqlDbType.NVarChar, 50) { Value = invoice.ClientIdentificationNumber });
+            command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) { Value = invoice.Amount });
+            command.Parameters.Add(new SqlParameter("@InvoiceDescription", SqlDbType.NVarChar, 255) { Value = invoice.InvoiceDescription });
+
+            // Parámetro OUTPUT
+            var createdAtParam = new SqlParameter("@CreatedAt", SqlDbType.DateTime) { Direction = ParameterDirection.Output };
+            command.Parameters.Add(createdAtParam);
 
             var id = Convert.ToInt32(await command.ExecuteScalarAsync());
             _logger.LogInformation("Invoice created successfully with ID: {InvoiceId}", id);
@@ -59,10 +57,7 @@ public class InvoiceDao : IInvoiceDao
         try
         {
             using var connection = new SqlConnection(_connectionString);
-            _logger.LogInformation("Entrooo");
-
             await connection.OpenAsync();
-            _logger.LogInformation("Entrooo 2");
 
             using var command = new SqlCommand("sp_GetInvoiceById", connection)
             {
@@ -86,7 +81,7 @@ public class InvoiceDao : IInvoiceDao
             throw;
         }
     }
-    
+
     public async Task<List<Invoice>> GetAllInvoicesAsync()
     {
         try
@@ -94,12 +89,10 @@ public class InvoiceDao : IInvoiceDao
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            using var command = new SqlCommand(
-                "SELECT Id, ClientName, ClientIdentificationNumber, Amount, InvoiceDescription, CreatedAt FROM Invoices", 
-                connection);
-
+            using var command = new SqlCommand("SELECT Id, ClientName, ClientIdentificationNumber, Amount, InvoiceDescription, CreatedAt FROM Invoices", connection);
+            
             _logger.LogInformation("Getting all invoices");
-            return await ReadMultipleInvoices(command); // ⚡ Asegura que devuelva una List
+            return await ReadMultipleInvoices(command);
         }
         catch (SqlException ex)
         {
@@ -107,7 +100,6 @@ public class InvoiceDao : IInvoiceDao
             throw;
         }
     }
-
 
     public async Task<IEnumerable<Invoice>> SearchInvoicesByClientAsync(string clientName)
     {
@@ -121,8 +113,7 @@ public class InvoiceDao : IInvoiceDao
                 CommandType = CommandType.StoredProcedure
             };
 
-            command.Parameters.Add(new SqlParameter("@ClientName", SqlDbType.NVarChar, 100) 
-                { Value = clientName });
+            command.Parameters.Add(new SqlParameter("@ClientName", SqlDbType.NVarChar, 100) { Value = clientName });
 
             return await ReadMultipleInvoices(command);
         }
@@ -133,8 +124,7 @@ public class InvoiceDao : IInvoiceDao
         }
     }
 
-    public async Task<IEnumerable<Invoice>> SearchInvoicesByClientIdentificationNumberAsync(
-        string clientIdentificationNumber)
+    public async Task<IEnumerable<Invoice>> SearchInvoicesByClientIdentificationNumberAsync(string clientIdentificationNumber)
     {
         try
         {
@@ -146,16 +136,13 @@ public class InvoiceDao : IInvoiceDao
                 CommandType = CommandType.StoredProcedure
             };
 
-            command.Parameters.Add(new SqlParameter("@ClientIdentificationNumber", SqlDbType.NVarChar, 20) 
-                { Value = clientIdentificationNumber });
+            command.Parameters.Add(new SqlParameter("@ClientIdentificationNumber", SqlDbType.NVarChar, 50) { Value = clientIdentificationNumber });
 
             return await ReadMultipleInvoices(command);
         }
         catch (SqlException ex)
         {
-            _logger.LogError(ex, 
-                "Error searching invoices for client identification number: {ClientIdentificationNumber}", 
-                clientIdentificationNumber);
+            _logger.LogError(ex, "Error searching invoices for client identification number: {ClientIdentificationNumber}", clientIdentificationNumber);
             throw;
         }
     }
@@ -177,13 +164,12 @@ public class InvoiceDao : IInvoiceDao
     {
         var invoices = new List<Invoice>();
         using var reader = await command.ExecuteReaderAsync();
-    
+
         while (await reader.ReadAsync())
         {
             invoices.Add(MapReaderToInvoice(reader));
         }
 
-        return invoices; // ⚡ Retorna List en lugar de IEnumerable
+        return invoices;
     }
-
 }

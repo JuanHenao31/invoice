@@ -84,3 +84,4 @@ C:\Users\juan.henao\RiderProjects\invoice\invoice\obj\Debug\net8.0\refint\invoic
 C:\Users\juan.henao\RiderProjects\invoice\invoice\obj\Debug\net8.0\invoice.pdb
 C:\Users\juan.henao\RiderProjects\invoice\invoice\obj\Debug\net8.0\invoice.genruntimeconfig.cache
 C:\Users\juan.henao\RiderProjects\invoice\invoice\obj\Debug\net8.0\ref\invoice.dll
+C:\Users\juan.henao\RiderProjects\invoice\invoice\obj\Debug\net8.0\invoice.sourcelink.json

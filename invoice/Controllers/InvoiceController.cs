@@ -70,4 +70,19 @@ public class InvoiceController : ControllerBase
         var invoices = await _invoiceService.SearchInvoicesByClientIdentificationNumberAsync(clientIdentificationNumber);
         return Ok(invoices);
     }
+    
+    /// <summary>
+    /// Busca facturas por nombre de cliente usando query params.
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchInvoicesByClientQueryParam([FromQuery] string client)
+    {
+        if (string.IsNullOrWhiteSpace(client))
+        {
+            return BadRequest(new { Message = "Client name is required for search." });
+        }
+
+        var invoices = await _invoiceService.SearchInvoicesByClientAsync(client);
+        return Ok(invoices);
+    }
 }
